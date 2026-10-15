@@ -10,8 +10,8 @@ arguments (Output)
 end
 
     % find speed of sound based on temperature
-    R = 286 % Gas Constant
-    gamma = 1.4 % Specific heat ratio
-    temp = (20 - 0.00649 * alt) + 273.15 % Get temperature in K
-    mach = sqrt(gamma * temp * R)
+    R = 286; % Gas Constant
+    gamma = 1.4; % Specific heat ratio
+    temp = temp_at_alt(alt); % Get temperature in K
+    mach = sqrt(gamma * temp * R);
 end
