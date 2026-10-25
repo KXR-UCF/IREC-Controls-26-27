@@ -1,16 +1,21 @@
-function [outputArg1,outputArg2] = params(inputArg1,inputArg2)
-%PARAMS Summary of this function goes here
-%   Detailed explanation goes here
-arguments (Input)
-    inputArg1
-    inputArg2
+function [P] = params(modelScale)
+addpath("ORK Data\");
+
+% Sim settings
+P.sim.dt = 1e-3;    P.sim.tEnd = 45;    P.sim.ctrlDiv = 20; % Controller Hz = 1/dt/ctrlDiv
+
+% Ork Trajectory data
+
+switch modelScale
+    case "fullScale"
+        ork.sim = readtable("Fullscale-Sim-Data.csv", VariableNamingRule="preserve");
+        ork.can = readtable("Fullscale-Canard_Aero_data.csv", VariableNamingRule="preserve"); 
+    case "subScale"
+        ork.sim = readtable("Subscale-Sim-Data.csv", VariableNamingRule="preserve");
+        ork.can = readtable("Fullscale-Canard_Aero_data.csv", VariableNamingRule="preserve"); 
 end
 
-arguments (Output)
-    outputArg1
-    outputArg2
-end
+P.traj.alt = griddedInterpolant(ork.sim.("# Time (s)"), ork.sim.("Altitude (m)"));
 
-outputArg1 = inputArg1;
-outputArg2 = inputArg2;
+
 end

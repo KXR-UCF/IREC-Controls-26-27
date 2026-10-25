@@ -1,0 +1,19 @@
+function [P] = params(modelScale)
+addpath("ORK Data\");
+
+% Sim settings
+P.sim.dt = 1e-3;    P.sim.tEnd = 45;    P.sim.ctrlDiv = 20; % Controller Hz = 1/dt/ctrlDiv
+
+% Ork Trajectory data
+
+switch modelScale
+    case "fullScale"
+        ork.sim = readtable("Fullscale-Sim-Data.csv", VariableNamingRule="preserve");
+        ork.can = readtable("Fullscale-Canard_Aero_data.csv", VariableNamingRule="preserve"); 
+    case "subScale"
+        ork.sim = readtable("Subscale-Sim-Data.csv", VariableNamingRule="preserve");
+        ork.can = readtable("Fullscale-Canard_Aero_data.csv", VariableNamingRule="preserve"); 
+
+P.traj.alt = griddedInterpolant(ork.sim.("# Time (s)"), ork.sim.("Altitude (m)"));
+
+end
