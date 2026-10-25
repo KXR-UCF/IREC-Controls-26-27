@@ -4,14 +4,19 @@ switch name
         servo.rate = 1740; %(deg/s)
         servo.res = 0.15;  %(deg/us)
         servo.deadband = 4;%(us)
+        servo.us_center = 1500;
     case "D930SW"
         servo.rate = 857;  %(deg/s)
         servo.res = 0.134; %(deg/us)
         servo.deadband = 1;%(us)
+        servo.us_center = 1500;
     case "D77MG"
         servo.rate = 667;  %(deg/s)
         servo.res = 0.132; %(deg/us)
         servo.deadband = 1;%(us)
+        servo.us_center = 1500;
+    otherwise
+        error("Uknown servo model, check overview sheet for supported servos or manually add new ones in sservo_spec.m")
 end
 
 end

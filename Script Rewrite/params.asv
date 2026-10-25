@@ -1,19 +1,71 @@
-function [P] = params(modelScale)
+function [P] = params(opts)
+arguments
+    opts.Scale (1,1) string {mustBeMember(opts.Scale, ["fullScale","subScale"])} = "fullScale"
+    opts.Servo (1,1) string = "2000-Super-Speed"
+    opts.dt    (1,1) double {mustBePositive} = 1e-3
+    opts.canardData (1,1) string {mustBeMember(opts.canardData, ["ORK","CFD"])} = "ORK"
+    opts.canardNum (1,1) double {mustBePositive} = 4
+    opts.Gains (1,3) double = [0.2, 0, 0]
+end
 addpath("ORK Data\");
 
 % Sim settings
-P.sim.dt = 1e-3;    P.sim.tEnd = 45;    P.sim.ctrlDiv = 20; % Controller Hz = 1/dt/ctrlDiv
+P.sim.dt = opts.dt;  P.sim.ctrlDiv = 20; % Controller Hz = 1/dt/ctrlDiv
 
 % Ork Trajectory data
 
-switch modelScale
+switch opts.Scale
     case "fullScale"
         ork.sim = readtable("Fullscale-Sim-Data.csv", VariableNamingRule="preserve");
         ork.can = readtable("Fullscale-Canard_Aero_data.csv", VariableNamingRule="preserve"); 
     case "subScale"
         ork.sim = readtable("Subscale-Sim-Data.csv", VariableNamingRule="preserve");
-        ork.can = readtable("Fullscale-Canard_Aero_data.csv", VariableNamingRule="preserve"); 
+        ork.can = readtable("Subscale-Canard_Aero_data.csv", VariableNamingRule="preserve"); 
+end
 
-P.traj.alt = griddedInterpolant(ork.sim.("# Time (s)"), ork.sim.("Altitude (m)"));
+% ORK has repeated timestamps, we need to remove these for interpolation to
+% work. tU is unique time, ia is its index that grabs the unique values
+% from ork time.
+[tU, ia] = unique(ork.sim.("# Time (s)"), "stable");
+P.sim.tEnd = tU(end);
+
+P.traj.alt = griddedInterpolant(tU, ork.sim.("Altitude (m)")(ia));
+P.traj.vel = griddedInterpolant(tU, ork.sim.("Total velocity (m/s)")(ia));
+P.traj.p = griddedInterpolant(tU, ork.sim.("Roll rate (rad/s)")(ia));
+P.traj.Ix = griddedInterpolant(tU, ork.sim.("Rotational moment of inertia (kg·m²)")(ia)); % whole rocket, need ot remove spincan ltr 
+P.traj.thrust = griddedInterpolant(tU, ork.sim.("Thrust (N)")(ia));
+
+% Servo params
+P.servo = servo_spec(opts.Servo);
+P.servo.us_per_deg = inv(P.servo.res);
+P.servo.us_trim = 0;
+
+% Canard Data
+P.canard.num = opts.canardNum; % Num of canards
+P.canard.r = 0.075; % Canard moment arm to vehicle roll axis
+P.canard.deltaMax = 10; % Max deflection in deg (for now)
+
+switch opts.canardData
+    case "ORK"
+        P.canard.cna = griddedInterpolant(ork.can.("# Mach number"), ork.can.("CNa (Canards)"), "linear", "nearest");
+    case "CFD"
+        error("CFD data not supported yet")
+end
+
+% Vehicle Parameters
+P.veh.Aref = 0.014; P.veh.diam = 0.1335;
+
+% Controller Parameters
+P.ctrl.Kp = opts.Gains(1);
+P.ctrl.Ki = opts.Gains(2);
+P.ctrl.Kd = opts.Gains(3);
+P.ctrl.pTarget = 0;
+
+% sensors
+P.gyro.noise = 0;  P.gyro.bias = 0;  P.gyro.rate = 500;
+P.baro.noise = 0;  P.baro.bias = 0;  P.baro.rate = 500;
+
+% initial state
+P.init.phi = 0;  P.init.p = 0;  P.init.delta = 0;
 
 end
