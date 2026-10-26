@@ -1,7 +1,11 @@
 function [P] = params(opts)
 arguments
     opts.Scale (1,1) string {mustBeMember(opts.Scale, ["fullScale","subScale"])} = "fullScale"
+    opts.site (1,1) string {mustBeMember(opts.site, ["SRA","Midland"])} = "SRA"
+    opts.padTemp (1,1) double = 32
     opts.Servo (1,1) string = "2000-Super-Speed"
+    opts.imu (1,1) string = "LSM6DSOX"
+    opts.baro (1,1) string = "MS5611"
     opts.dt    (1,1) double {mustBePositive} = 1e-3
     opts.canardData (1,1) string {mustBeMember(opts.canardData, ["ORK","CFD"])} = "ORK"
     opts.canardNum (1,1) double {mustBePositive} = 4
@@ -39,6 +43,7 @@ P.traj.thrust = griddedInterpolant(tU, ork.sim.("Thrust (N)")(ia));
 P.servo = servo_spec(opts.Servo);
 P.servo.us_per_deg = inv(P.servo.res);
 P.servo.us_trim = 0;
+P.servo.us_step = 1; % pwm res of microcrontroller
 
 % Canard Data
 P.canard.num = opts.canardNum; % Num of canards
@@ -62,10 +67,16 @@ P.ctrl.Kd = opts.Gains(3);
 P.ctrl.pTarget = 0;
 
 % sensors
-P.gyro.noise = 0;  P.gyro.bias = 0;  P.gyro.rate = 500;
+
+P.imu = imu_spec(opts.imu);
+
 P.baro.noise = 0;  P.baro.bias = 0;  P.baro.rate = 500;
 
 % initial state
 P.init.phi = 0;  P.init.p = 0;  P.init.delta = 0;
+
+% Site
+P.site = site_spec(opts.site);
+P.site.Tpad = 273.15 + opts.pad
 
 end
