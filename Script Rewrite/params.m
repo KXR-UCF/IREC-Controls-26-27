@@ -10,6 +10,7 @@ arguments
     opts.canardData (1,1) string {mustBeMember(opts.canardData, ["ORK","CFD"])} = "ORK"
     opts.canardNum (1,1) double {mustBePositive} = 4
     opts.Gains (1,3) double = [0.2, 0, 0]
+    opts.gainSchedule (1,1) logical = false
 end
 addpath("ORK Data\");
 
@@ -65,6 +66,10 @@ P.ctrl.Ki = opts.Gains(2);
 P.ctrl.Kd = opts.Gains(3);
 P.ctrl.pTarget = 0;
 P.ctrl.openLoopCmd = 2;
+P.ctrl.tOn = 0.5; P.ctrl.tOff = P.sim.tEnd;
+P.ctrl.schedule = opts.gainSchedule;
+P.ctrl.deltaMax = 10;
+
 
 % sensors
 
@@ -79,5 +84,12 @@ P.init.phi = 0;  P.init.p = 0;  P.init.delta = 0;
 P.site = site_spec(opts.site);
 P.site.Tpad = 273.15 + opts.padTemp;
 P.site.T0 = P.site.Tpad + 0.0065*P.site.elev;
+
+% Disturbances
+P.dist.misalign  = 1;      % deg, fixed canard offset (build tolerance), try 0.25
+P.dist.cnaScale  = 1;      % multiplier on canard CNa (aero uncertainty), MC: 0.8-1.2
+P.dist.bearingC  = 0;      % N*m per rad/s, spin-can bearing friction, try 1e-4
+P.dist.turbSigma = 0;      % roll moment noise as fraction of q*Aref*d, try 1e-4
+P.dist.turbTau   = 0.2;    % s, turbulence correlation time
 
 end
