@@ -21,6 +21,13 @@ switch name
         servo.deadband_us = 1;
         servo.deadband = servo.deadband_us / servo.us_per_deg;
         servo.us_center = 1500;
+    case "Axon-MINI-MK2"
+        servo.rate = 852;  %(deg/s)
+        servo.res = 0.175; %(deg/us)
+        servo.us_per_deg = inv(servo.res);
+        servo.deadband_us = 2;
+        servo.deadband = servo.deadband_us / servo.us_per_deg;
+        servo.us_center = 1500;
     otherwise
         error("Uknown servo model, check overview sheet for supported servos or manually add new ones in sservo_spec.m")
 end

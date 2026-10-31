@@ -3,7 +3,7 @@ arguments
     opts.Scale (1,1) string {mustBeMember(opts.Scale, ["fullScale","subScale"])} = "fullScale"
     opts.site (1,1) string {mustBeMember(opts.site, ["SRA","Midland"])} = "SRA"
     opts.padTemp (1,1) double = 32
-    opts.Servo (1,1) string {mustBeMember(opts.Servo, ["2000-Super-Speed","D930SW","D77MG"])}= "2000-Super-Speed"
+    opts.Servo (1,1) string {mustBeMember(opts.Servo, ["2000-Super-Speed","D930SW","D77MG","Axon-MINI-MK2"])} = "Axon-MINI-MK2"
     opts.imu (1,1) string = "LSM6DSOX"
     opts.baro (1,1) string = "MS5611"
     opts.dt    (1,1) double {mustBePositive} = 1e-3
@@ -11,6 +11,9 @@ arguments
     opts.canardNum (1,1) double {mustBePositive} = 4
     opts.Gains (1,3) double = [0.2, 0, 0]
     opts.gainSchedule (1,1) logical = false
+    opts.gearDown (1,1) double = 1
+    opts.manualEndtime (1,1) double = 0
+    opts.maxQ (1,1) = 172000
 end
 addpath("ORK Data\");
 
@@ -34,6 +37,10 @@ end
 [tU, ia] = unique(ork.sim.("# Time (s)"), "stable");
 P.sim.tEnd = tU(end);
 
+if opts.manualEndtime ~= 0
+    P.sim.tEnd = opts.manualEndtime;
+end
+
 P.traj.alt = griddedInterpolant(tU, ork.sim.("Altitude (m)")(ia));
 P.traj.vel = griddedInterpolant(tU, ork.sim.("Total velocity (m/s)")(ia));
 P.traj.p = griddedInterpolant(tU, ork.sim.("Roll rate (rad/s)")(ia));
@@ -44,6 +51,10 @@ P.traj.thrust = griddedInterpolant(tU, ork.sim.("Thrust (N)")(ia));
 P.servo = servo_spec(opts.Servo);
 P.servo.us_trim = 0;
 P.servo.us_step = 1; % pwm res of microcrontroller
+P.servo.gearDown = opts.gearDown;
+P.servo.us_per_deg = P.servo.us_per_deg * P.servo.gearDown;
+P.servo.rate = P.servo.rate / P.servo.gearDown;
+P.servo.deadband = P.servo.deadband_us / P.servo.us_per_deg;
 
 % Canard Data
 P.canard.num = opts.canardNum; % Num of canards
@@ -69,7 +80,7 @@ P.ctrl.openLoopCmd = 2;
 P.ctrl.tOn = 0.5; P.ctrl.tOff = P.sim.tEnd;
 P.ctrl.schedule = opts.gainSchedule;
 P.ctrl.deltaMax = 10;
-P.ctrl.qRef = 172000;
+P.ctrl.qRef = opts.maxQ;
 P.ctrl.qMin = 2000;
 P.ctrl.sMax = 10;
 
