@@ -20,18 +20,23 @@ cmd = 0;
 
 state.ctrl.integ = 0; state.ctrl.pPrev = 0;
 
+state.ctrl.q = 0; % For tuning purposes
+state.ctrl.s = 0;
+
 % Noise signal
 w = 0;  a_w = exp(-dt/P.dist.turbTau);
 
 
 % Preallocate record
 rec.t = t;  [rec.p, rec.phi, rec.delta, rec.cmd, rec.M, rec.q, rec.mach, rec.pMeas, ...
- rec.presTrue, rec.presMeas, rec.rho, rec.a] = deal(zeros(1,n));
+ rec.presTrue, rec.presMeas, rec.rho, rec.a, rec.s] = deal(zeros(1,n));
 
 for k = 1:n
     vel = P.traj.vel(t(k));
     env = atmos(P.traj.alt(t(k)), vel, P.site);
     [state.sens, meas] = sensors(state.sens, state.veh, env, P, t(k));
+    
+    state.ctrl.q = env.q;
 
     if mod(k-1, P.sim.ctrlDiv) == 0
         %Defaults to closed loop due to opts defaulting to false
@@ -56,6 +61,7 @@ for k = 1:n
     %record
     rec.p(k) = state.veh.p;  rec.phi(k) = state.veh.phi;  rec.delta(k) = state.servo.delta;
     rec.cmd(k) = cmd;  rec.M(k) = a.M;  rec.q(k) = env.q;  rec.mach(k) = a.mach;
+    rec.s(k) = state.ctrl.s;
     rec.pMeas(k) = meas.p;
     rec.presTrue(k) = env.p;  rec.presMeas(k) = meas.pres;  rec.rho(k) = env.rho;
 end

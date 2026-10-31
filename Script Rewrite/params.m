@@ -3,7 +3,7 @@ arguments
     opts.Scale (1,1) string {mustBeMember(opts.Scale, ["fullScale","subScale"])} = "fullScale"
     opts.site (1,1) string {mustBeMember(opts.site, ["SRA","Midland"])} = "SRA"
     opts.padTemp (1,1) double = 32
-    opts.Servo (1,1) string = "2000-Super-Speed"
+    opts.Servo (1,1) string {mustBeMember(opts.Servo, ["2000-Super-Speed","D930SW","D77MG"])}= "2000-Super-Speed"
     opts.imu (1,1) string = "LSM6DSOX"
     opts.baro (1,1) string = "MS5611"
     opts.dt    (1,1) double {mustBePositive} = 1e-3
@@ -15,7 +15,7 @@ end
 addpath("ORK Data\");
 
 % Sim settings
-P.sim.dt = opts.dt;  P.sim.ctrlDiv = 20; % Controller Hz = 1/dt/ctrlDiv
+P.sim.dt = opts.dt;  P.sim.ctrlDiv = 50; % Controller Hz = 1/dt/ctrlDiv
 
 % Ork Trajectory data
 
@@ -69,7 +69,9 @@ P.ctrl.openLoopCmd = 2;
 P.ctrl.tOn = 0.5; P.ctrl.tOff = P.sim.tEnd;
 P.ctrl.schedule = opts.gainSchedule;
 P.ctrl.deltaMax = 10;
-
+P.ctrl.qRef = 172000;
+P.ctrl.qMin = 2000;
+P.ctrl.sMax = 10;
 
 % sensors
 
@@ -86,7 +88,7 @@ P.site.Tpad = 273.15 + opts.padTemp;
 P.site.T0 = P.site.Tpad + 0.0065*P.site.elev;
 
 % Disturbances
-P.dist.misalign  = 1;      % deg, fixed canard offset (build tolerance), try 0.25
+P.dist.misalign  = 0.25;      % deg, fixed canard offset (build tolerance), try 0.25
 P.dist.cnaScale  = 1;      % multiplier on canard CNa (aero uncertainty), MC: 0.8-1.2
 P.dist.bearingC  = 0;      % N*m per rad/s, spin-can bearing friction, try 1e-4
 P.dist.turbSigma = 0;      % roll moment noise as fraction of q*Aref*d, try 1e-4
