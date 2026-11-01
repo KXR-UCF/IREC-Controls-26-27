@@ -10,10 +10,14 @@ P.dist.turbSigma = 1e-4;      % roll moment noise as fraction of q*Aref*d, try 1
 P.dist.turbTau   = 0.2;    % s, turbulence correlation time
 rec = run_sim(P);
 
-plot_results(rec, P
-
+plot_results(rec, P)
+animate_roll(rec, P)
 
 
 %---Notes Aera---
 % The Param setup below produces a good result for subcale tuning
 % P = params(Gains=[3, 0.6, 0.01, 7], gainSchedule=true, canardNum=2, Scale="subScale", gearDown=1, manualEndtime=11, maxQ = 20000, site="SRA", cascade=true, rollProgram=true, rollProgram_t=3);
+
+
+%Fullscale P for reference
+% P = params(Gains=[3, 0.6, 0.01, 7], gainSchedule=true, canardNum=2, gearDown=1, maxQ = 172000, cascade=true, rollProgram=true, rollProgram_t=18);
