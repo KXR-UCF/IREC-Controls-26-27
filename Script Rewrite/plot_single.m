@@ -10,7 +10,7 @@ P.dist.turbTau   = 0.2;    % s, turbulence correlation time
 rec = run_sim(P);
 
 plot_results(rec, P)
-animate_roll(rec, P, "Zoom",true)
+animate_roll(rec, P, Plots=true, Zoom=true, Video="subscale-sim-vid.mp4")
 
 
 %---Notes Aera---
