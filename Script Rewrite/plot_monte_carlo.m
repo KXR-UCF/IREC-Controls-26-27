@@ -1,7 +1,7 @@
 function plot_monte_carlo(recs, res, draws, names, pass)
 % Overlay of every run (blue = pass, red = fail)
 figure('Name','MC overlay');
-tl = tiledlayout(2,1, 'TileSpacing','compact');
+tiledlayout(2,1, 'TileSpacing','compact');
 a1 = nexttile; hold on; grid on; ylabel('Roll angle (deg)'); title('All runs (red = fail)')
 a2 = nexttile; hold on; grid on; ylabel('Roll rate (rad/s)'); xlabel('Time (s)')
 for i = 1:numel(recs)
@@ -9,6 +9,7 @@ for i = 1:numel(recs)
     plot(a1, recs{i}.t, rad2deg(recs{i}.phi), 'Color', c)
     plot(a2, recs{i}.t, recs{i}.p,            'Color', c)
 end
+plot(a1, recs{1}.t, rad2deg(recs{1}.phiTarget), 'w--', 'LineWidth', 1.5)   % reference target
 linkaxes([a1 a2], 'x')
 
 % Distribution of worst holding error

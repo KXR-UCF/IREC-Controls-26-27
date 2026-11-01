@@ -23,7 +23,7 @@ for i = 1:N
 
     rec = run_sim(P);
     res(i) = summarize(rec, P);
-    recs{i} = struct('t', rec.t(1:10:end), 'phi',rec.phi(1:10:end), 'p',rec.p(1:10:end));    %small set of data to plot
+    recs{i} = struct('t', rec.t(1:10:end), 'phi',rec.phi(1:10:end), 'p',rec.p(1:10:end), 'phiTarget',rec.phiTarget(1:10:end));    %small set of data to plot
 end
 
 pass = [res.phiMax] < deg2rad(10) & [res.overshoot] < deg2rad(15);  % Check runs to see if they went above 10deg from 0
