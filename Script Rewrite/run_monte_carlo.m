@@ -1,7 +1,9 @@
 clearvars
 close all
 
-N = 200; rng(1);    %Fixed seed so its repeatable.
+% N = number of runs each run takes about 5-15 seconds depending on how
+% long the fligt is
+N = 1109; rng(1);    %Fixed seed so its repeatable.
 
 P0 = params(Gains=[3, 0.6, 0.01, 7], gainSchedule=true, canardNum=2, Scale="subScale", gearDown=1, manualEndtime=11, maxQ = 20000, site="SRA", cascade=true, rollProgram=true, rollProgram_t=3);
 
@@ -36,7 +38,7 @@ stamp = string(datetime('now', 'Format','yyyyMMdd_HHmmss'));
 save(fullfile(outDir, "mc_" + stamp + '.mat'), "draws", "names", "res", "pass", "recs", "P0")
 writetable([array2table(draws, 'VariableNames', names) struct2table(res) table(pass(:), 'VariableNames', "pass")], ...
            fullfile(outDir, "mc_" + stamp + ".csv"))
-
+writetable(flatten_params(P0), fullfile(outDir, "mc_" + stamp + "_params.csv"))
 plot_monte_carlo(recs, res, draws, names, pass)
 
 function s = summarize(rec, P)
@@ -61,6 +63,20 @@ if ~isempty(tChg)                                    % how far phi went past the
 end
 end
 
+function T = flatten_params(S, prefix)
+if nargin < 2, prefix = "P"; end
+name = strings(0,1);  value = strings(0,1);
+for f = string(fieldnames(S))'
+    v = S.(f);  key = prefix + "." + f;
+    if isstruct(v)
+        sub = flatten_params(v, key);
+        name = [name; sub.name];  value = [value; sub.value];
+    elseif (isnumeric(v) || islogical(v) || isstring(v)) && isscalar(v)
+        name(end+1,1) = key;  value(end+1,1) = string(v);
+    end
+end
+T = table(name, value);
+end
 
 %---Notes Aera---
 % The Param setup below produces a good result for subcale tuning
