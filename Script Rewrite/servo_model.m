@@ -16,4 +16,12 @@ if servoState.moving
     if abs(err) <= maxStep, servoState.moving = false; end      % arrived
 end
 
+gap = servo.backlash;
+diff = servoState.delta - servoState.out;
+if diff > gap/2
+    servoState.out = servoState.delta - gap/2;
+elseif diff < -gap/2
+    servoState.out = servoState.delta + gap/2;
+end
+
 end

@@ -9,15 +9,19 @@ arguments
     opts.dt    (1,1) double {mustBePositive} = 1e-3
     opts.canardData (1,1) string {mustBeMember(opts.canardData, ["ORK","CFD"])} = "ORK"
     opts.canardNum (1,1) double {mustBePositive} = 4
-    opts.Gains (1,3) double = [0.2, 0, 0]
+    opts.Gains (1,4) double = [0.2, 0, 0, 0]
     opts.gainSchedule (1,1) logical = false
     opts.gearDown (1,1) double = 1
     opts.manualEndtime (1,1) double = 0
+    opts.maxQ (1,1) = 172000
+    opts.cascade (1,1) logical = false
+    opts.rollProgram (1,1) logical = false
+    opts.rollProgram_t (1,1) double = 5
 end
 addpath("ORK Data\");
 
 % Sim settings
-P.sim.dt = opts.dt;  P.sim.ctrlDiv = 50; % Controller Hz = 1/dt/ctrlDiv
+P.sim.dt = opts.dt;  P.sim.ctrlDiv = 20; % Controller Hz = 1/dt/ctrlDiv
 
 % Ork Trajectory data
 
@@ -37,7 +41,8 @@ end
 P.sim.tEnd = tU(end);
 
 if opts.manualEndtime ~= 0
-    P.sim
+    P.sim.tEnd = opts.manualEndtime;
+end
 
 P.traj.alt = griddedInterpolant(tU, ork.sim.("Altitude (m)")(ia));
 P.traj.vel = griddedInterpolant(tU, ork.sim.("Total velocity (m/s)")(ia));
@@ -53,10 +58,13 @@ P.servo.gearDown = opts.gearDown;
 P.servo.us_per_deg = P.servo.us_per_deg * P.servo.gearDown;
 P.servo.rate = P.servo.rate / P.servo.gearDown;
 P.servo.deadband = P.servo.deadband_us / P.servo.us_per_deg;
+P.servo.backlash = 0.5; %deg of slop between servo output and canard shaft
 
 % Canard Data
 P.canard.num = opts.canardNum; % Num of canards
 P.canard.r = 0.075; % Canard moment arm to vehicle roll axis
+if opts.Scale == "subScale", P.canard.r = 0.057; end
+
 P.canard.deltaMax = 10; % Max deflection in deg (for now)
 
 switch opts.canardData
@@ -66,8 +74,11 @@ switch opts.canardData
         error("CFD data not supported yet")
 end
 
-% Vehicle Parameters
+% Vehicle Parameters -- UPDATE WITH ORK CHANGES!!!
 P.veh.Aref = 0.014; P.veh.diam = 0.1335;
+if opts.Scale == "subScale"
+    P.veh.Aref = 0.009; P.veh.diam = 0.1056;
+end
 
 % Controller Parameters
 P.ctrl.Kp = opts.Gains(1);
@@ -78,9 +89,18 @@ P.ctrl.openLoopCmd = 2;
 P.ctrl.tOn = 0.5; P.ctrl.tOff = P.sim.tEnd;
 P.ctrl.schedule = opts.gainSchedule;
 P.ctrl.deltaMax = 10;
-P.ctrl.qRef = 172000;
+P.ctrl.qRef = opts.maxQ;
 P.ctrl.qMin = 2000;
 P.ctrl.sMax = 10;
+
+P.ctrl.cascade = opts.cascade;
+P.ctrl.Kphi = opts.Gains(4);
+P.ctrl.phiTarget = 0;
+P.ctrl.pTargetMax = 1; % rad/s, clamps what outer loop can cmd
+
+P.ctrl.rollProgram = opts.rollProgram;
+P.ctrl.rollProgram_t = opts.rollProgram_t;
+
 
 % sensors
 

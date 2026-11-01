@@ -2,6 +2,8 @@ function [ctrl, cmd] = controller(ctrl, meas, P, t)
 C = P.ctrl;
 dt = P.sim.dt * P.sim.ctrlDiv;  %Time since last run
 
+ctrl.phiEst = ctrl.phiEst + meas.p*dt;
+
 % Only actuate canards during the "enable" window
 if t < C.tOn || t > C.tOff
     ctrl.integ = 0; ctrl.pPrev = meas.p; cmd = 0;
@@ -16,13 +18,26 @@ if C.schedule
     s = min(C.qRef / max(ctrl.q, C.qMin), C.sMax);
     ctrl.s = s;
 end
-%logic here
 
-err = C.pTarget - meas.p;           %rad/s
+%logic here
+phiT = C.phiTarget;
+if C.rollProgram && t > C.rollProgram_t
+    phiT = deg2rad(90);
+end
+ctrl.phiTarget = phiT;
+
+pT = C.pTarget;
+if C.cascade    % if not running cascaded pT just stays at 0
+    pT = C.Kphi * (phiT - ctrl.phiEst);  %outer loop; angle to rate
+    pT = max(min(pT, C.pTargetMax), -C.pTargetMax);
+end
+ctrl.pTarget = pT;  %keeps atrack in state for recording
+
+err = pT - meas.p;           %rad/s
 deriv = -(meas.p - ctrl.pPrev) / dt;%derivative on measurement
 ctrl.pPrev = meas.p;
 
-u = (s*C.Kp*err + C.Ki*ctrl.integ + C.Kd*deriv);   % deg (gains are deg per rad/s)
+u = s*(C.Kp*err + C.Ki*ctrl.integ + C.Kd*deriv);   % deg (gains are deg per rad/s)
 
 % Anti-windup: only integrate when not saturated (or when it helps unsaturate)
 if abs(u) < C.deltaMax || sign(err) ~= sign(u)

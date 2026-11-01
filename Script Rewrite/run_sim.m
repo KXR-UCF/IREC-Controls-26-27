@@ -10,6 +10,7 @@ dt = P.sim.dt;  t = 0:dt:P.sim.tEnd;    n = numel(t);
 state.veh.phi = P.init. phi;
 state.veh.p = P.init.p;
 state.servo.delta = P.init.delta;
+state.servo.out = state.servo.delta;
 state.servo.moving = false;
 
 env = atmos(P.traj.alt(0), P.traj.vel(0), P.site);
@@ -22,6 +23,9 @@ state.ctrl.integ = 0; state.ctrl.pPrev = 0;
 
 state.ctrl.q = 0; % For tuning purposes
 state.ctrl.s = 0;
+state.ctrl.pTarget = 0;
+state.ctrl.phiTarget = 0;
+state.ctrl.phiEst = 0;
 
 % Noise signal
 w = 0;  a_w = exp(-dt/P.dist.turbTau);
@@ -29,7 +33,7 @@ w = 0;  a_w = exp(-dt/P.dist.turbTau);
 
 % Preallocate record
 rec.t = t;  [rec.p, rec.phi, rec.delta, rec.cmd, rec.M, rec.q, rec.mach, rec.pMeas, ...
- rec.presTrue, rec.presMeas, rec.rho, rec.a, rec.s] = deal(zeros(1,n));
+ rec.presTrue, rec.presMeas, rec.rho, rec.a, rec.s, rec.servoOut, rec.phiEst, rec.phiTarget, rec.pTarget] = deal(zeros(1,n));
 
 for k = 1:n
     vel = P.traj.vel(t(k));
@@ -64,5 +68,9 @@ for k = 1:n
     rec.s(k) = state.ctrl.s;
     rec.pMeas(k) = meas.p;
     rec.presTrue(k) = env.p;  rec.presMeas(k) = meas.pres;  rec.rho(k) = env.rho;
+    rec.servoOut(k) = state.servo.out;
+    rec.phiEst(k) = state.ctrl.phiEst;
+    rec.pTarget(k) = state.ctrl.pTarget;
+    rec.phiTarget(k) = state.ctrl.phiTarget;
 end
 end
