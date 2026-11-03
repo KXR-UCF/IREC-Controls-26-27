@@ -1,7 +1,7 @@
 function aero = aero_model(servoState, env, vel, veh, P, t, w)
 aero.mach = vel / env.a;
 CNa_set = P.canard.cna(aero.mach);  % ORK canard-set CNa, per rad, ref = Aref
-CNa_fin = 2*CNa_set / P.canard.num; % singe fin (Barrowman: set = N/2 * fin)
+CNa_fin = 2*CNa_set / P.canard.ORKnum; % singe fin (Barrowman: set = N/2 * fin)
 
 %use effective angle of attack and not raw deflection to calculate lift
 alpha = deg2rad(servoState.out + P.dist.misalign) - veh.p * P.canard.r / max(vel, 1);

@@ -3,7 +3,7 @@ close all
 
 % N = number of runs each run takes about 5-15 seconds depending on how
 % long the fligt is
-N = 1109; rng(1);    %Fixed seed so its repeatable.
+N = 100; rng(1);    %Fixed seed so its repeatable.
 
 P0 = params(Gains=[3, 0.6, 0.01, 7], gainSchedule=true, canardNum=2, Scale="subScale", gearDown=1, manualEndtime=11, maxQ = 20000, site="SRA", cascade=true, rollProgram=true, rollProgram_t=3);
 

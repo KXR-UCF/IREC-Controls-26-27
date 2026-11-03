@@ -17,6 +17,7 @@ arguments
     opts.cascade (1,1) logical = false
     opts.rollProgram (1,1) logical = false
     opts.rollProgram_t (1,1) double = 5
+    opts.openLoop (1,1) logical = false
 end
 addpath("ORK Data\");
 
@@ -62,6 +63,12 @@ P.servo.backlash = 0.5; %deg of slop between servo output and canard shaft
 
 % Canard Data
 P.canard.num = opts.canardNum; % Num of canards
+P.canard.ORKnum = 4;           %VERY IMPORTANT MUST CHANGE OR SIM IS BAD <<<<<===================
+if opts.Scale == 'subScale'
+    P.canard.ORKnum = 2;
+end
+%For more accurate sim with ORK data export ork CNA with correct canard num
+
 P.canard.r = 0.075; % Canard moment arm to vehicle roll axis
 if opts.Scale == "subScale", P.canard.r = 0.057; end
 
@@ -100,6 +107,7 @@ P.ctrl.pTargetMax = 4; % rad/s, clamps what outer loop can cmd
 
 P.ctrl.rollProgram = opts.rollProgram;
 P.ctrl.rollProgram_t = opts.rollProgram_t;
+
 
 
 % sensors
